@@ -30,7 +30,7 @@ Minor Bug Fixes/Admin:
 
 - [x] Compress and resize images
 - [x] Heading duplicated on pages?
-- [ ] Max image height
+- [x] Max image height
 - [x] Get working on local server (SimpleHTTPServer)
 
 Maybe Do:
