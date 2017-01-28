@@ -22,9 +22,9 @@ To run locally:
 Features:
 
 - [x] Search (Basic)
-- [ ] Click to open larger images
-- [ ] Password Protect (SSL)
-- [ ] Deploy Online/Automatic FTP
+- [x] Click to open larger images
+- [ ] Automatic FTP
+- [ ] HTTPS
 
 Minor Bug Fixes/Admin:
 
@@ -32,6 +32,8 @@ Minor Bug Fixes/Admin:
 - [x] Heading duplicated on pages?
 - [x] Max image height
 - [x] Get working on local server (SimpleHTTPServer)
+- [ ] Strip img tags from summary
+- [ ] Get favicon
 
 Maybe Do:
 
