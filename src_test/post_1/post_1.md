@@ -16,3 +16,5 @@ Examples of sections would be chapters, the various tabbed pages in a tabbed dia
 >distributable or reusable, e.g. in syndication. This could be a forum post, a 
 >magazine or newspaper article, a blog entry, a user-submitted comment, an 
 >interactive widget or gadget, or any other independent item of content.
+
+![alt text](test.jpg)

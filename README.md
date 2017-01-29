@@ -25,10 +25,10 @@ Features:
 - [x] Click to open larger images
 - [ ] Automatic FTP
 - [ ] HTTPS
+- [x] Automatically downsize images
 
 Minor Bug Fixes/Admin:
 
-- [x] Compress and resize images
 - [x] Heading duplicated on pages?
 - [x] Max image height
 - [x] Get working on local server (SimpleHTTPServer)

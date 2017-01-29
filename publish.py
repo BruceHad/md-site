@@ -1,4 +1,6 @@
 import sys, os, markdown, operator, shutil, time, json, re, argparse
+from wand.image import Image
+from wand.display import display
 
 def get_title(string):
     """ Converts the folder name to a nicely printed title.
@@ -39,7 +41,8 @@ def get_date(string, post_name):
             return time.mktime(date_time)
 
 def get_summary(html):
-    """Extract a sample of the post contents. Expects some html in a string.
+    """ Extract a sample of the post contents. 
+        Expects some html in a string.
     """
     summary = html.split('\n')[2:4]
     summary = ''.join(summary)
@@ -63,6 +66,21 @@ def get_search_index_json(post_data):
         	else:
 	            index[keyword] = [p['name'],]
     return json.dumps(index)
+
+def resize_and_copy(src, target):
+    """ Takes any image files and downsizes then 
+        copies to target.
+    """
+    # shutil.copyfile(os.path.join(src_path, file), 
+                #     os.path.join(live_path, file))
+    img = Image(filename=src)
+    # print(img.size)
+    if img.height > 550:
+        with img.clone() as new_image:
+            new_image.transform(resize='x550')
+            new_image.save(filename=target)
+    else:
+        shutil.copyfile(src, target)
     
     
 def wrap_and_write_post(replacements, template_path, output_path):
@@ -77,8 +95,8 @@ def wrap_and_write_post(replacements, template_path, output_path):
             outfile.write(line)
     
 def generate_posts(to_publish, src_dir, live_dir):
-    """ Map to_publish folders to live_dir, converting the MD to HTML and extracting
-    post_data as we go.
+    """ Map to_publish folders to live_dir, converting the MD to HTML 
+    and extracting post_data as we go.
     
     """
     
@@ -96,7 +114,9 @@ def generate_posts(to_publish, src_dir, live_dir):
             if file.endswith(".md"):
                 # code expects one and only one md file per folder.
                 md_file_exists = True
-                input_path, output_path = os.path.join(src_path,file), os.path.join(live_path,'index.html')
+                input_path, output_path = (
+                    os.path.join(src_path,file), 
+                    os.path.join(live_path,'index.html'))
                 markdown.markdownFromFile(input=input_path, 
                     output=output_path, output_format="html5")
                 pd = {"name": src_name}
@@ -108,11 +128,17 @@ def generate_posts(to_publish, src_dir, live_dir):
                     '{{body}}': pd["html"], 
                     '{{title}}': pd["title"],
                 }
-                wrap_and_write_post(replacements, 'templates/posts/page_template.html', 
-                                    output_path)
+                wrap_and_write_post(
+                    replacements, 
+                    'templates/posts/page_template.html', 
+                    output_path)
                 post_data.append(pd)
-            elif file.endswith(tuple(['.jpg', '.gif', '.png'])): # copy any images across
-                shutil.copyfile(os.path.join(src_path, file), os.path.join(live_path, file))
+            elif file.endswith(tuple(['.jpg', '.gif', '.png', 'jpeg'])):
+                src = os.path.join(src_path, file)
+                target = os.path.join(live_path, file)
+                resize_and_copy(src, target)
+
+
         if not md_file_exists: 
             shutil.rmtree(live_path) # delete empty folder
     return post_data
@@ -122,21 +148,29 @@ def generate_index(post_data, live_dir, root):
     for post in post_data:
         date = time.strftime("%Y-%m-%d", time.localtime(post['date']))
         if(posts < 3):
-            link = "Read more of: <a href='%s/index.html'>%s</a></li>\n"%(post['name'], post['title'])
-            summary_posts += "<article><h3>%s</h3><p>%s</p><div>%s</div><p>...</p><p>%s</p></article>\n"%(post['title'], date, post['summary'], link)
+            link = ("Read more of: <a href='%s/index.html'>%s</a></li>\n"
+                %(post['name'], post['title']))
+            summary_posts += ("<article><h3>%s</h3>\
+                    <p>%s</p><div>%s</div><p>...</p><p>%s</p></article>\n"
+                    %(post['title'], date, post['summary'], link))
         posts += 1
-        post_list += "<li><a href='%s/index.html'>%s <small>%s</small></a></li>\n"%('posts/'+post['name'], post['title'], date)
+        post_list += ("<li><a href='%s/index.html'>%s \
+                <small>%s</small></a></li>\n"
+                %('posts/'+post['name'], post['title'], date))
     replacements = {'{{first_post}}': summary_posts, 
         '{{link_list}}': post_list,
         '{{search_index}}': get_search_index_json(post_data),
     }
-    wrap_and_write_post(replacements, 'templates/posts/index_template.html', os.path.join(root,'index.html'))
+    wrap_and_write_post(replacements, 
+        'templates/posts/index_template.html', 
+        os.path.join(root,'index.html'))
 
     
 def publish(src_dir):
     root = 'live'
     live_dir = os.path.join(root, 'posts/')
-    to_publish = [directory for directory in os.listdir(src_dir) if '.' not in directory]
+    to_publish = [directory for directory in os.listdir(src_dir) 
+        if '.' not in directory]
 
     post_data = generate_posts(to_publish, src_dir, live_dir)
     post_data = add_search_index(post_data)
@@ -153,7 +187,9 @@ if __name__ == "__main__":
     parser.add_argument("-t", "--test", 
         help="Run doctests",
         action="store_true")
-    parser.add_argument("path", nargs='?', default=os.path.join(os.getcwd(), default_directory),
+    parser.add_argument("path", 
+        nargs='?', 
+        default=os.path.join(os.getcwd(), default_directory),
         help="Path to source files (defaults to "+default_directory+")")
     args = parser.parse_args()
     
