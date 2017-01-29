@@ -33,7 +33,7 @@ Minor Bug Fixes/Admin:
 - [x] Max image height
 - [x] Get working on local server (SimpleHTTPServer)
 - [ ] Strip img tags from summary
-- [ ] Get favicon
+- [x] Get favicon
 
 Maybe Do:
 
