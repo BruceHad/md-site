@@ -6,6 +6,8 @@ Yet another static site generator.
 
 ## Quickstart
 
+Requires python 3+.
+
     cd path/to/src
     source env/bin/activate
     python publish.py source/path/
@@ -32,9 +34,12 @@ Minor Bug Fixes/Admin:
 - [x] Heading duplicated on pages?
 - [x] Max image height
 - [x] Get working on local server (SimpleHTTPServer)
-- [ ] Strip img tags from summary
+- [x] <del>Strip img tags from summary</del>Replace imgs with thumbnails
 - [x] Get favicon
+- [ ] Make output folder configurable.
+- [ ] Fix character encoding issues
 
 Maybe Do:
 
-- [ ] 
+- [ ] Only update changed pages.
+- [ ] Include videos/music.

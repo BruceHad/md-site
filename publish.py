@@ -1,6 +1,7 @@
 import sys, os, markdown, operator, shutil, time, json, re, argparse
 from wand.image import Image
 from wand.display import display
+from bs4 import BeautifulSoup
 
 def get_title(string):
     """ Converts the folder name to a nicely printed title.
@@ -40,12 +41,19 @@ def get_date(string, post_name):
             date_time = time.strptime(match.group(), '%Y-%m-%d')
             return time.mktime(date_time)
 
-def get_summary(html):
-    """ Extract a sample of the post contents. 
-        Expects some html in a string.
+
+def get_summary(html, src_post):
+    """ Extract a sample of the post contents. And convert image srcs to 
+        link to smaller versions. Expects some html in a string.
     """
-    summary = html.split('\n')[2:4]
-    summary = ''.join(summary)
+    bs = BeautifulSoup(html, "html.parser")
+    for img in bs.findAll('img'):
+        fn_split = img['src'].split('.')
+        new_fn = fn_split[0]+'_thumb.'+fn_split[1]
+        img['src'] = os.path.join('posts', src_post, new_fn)
+
+    paras = bs.findAll('p', limit=3)
+    summary = ''.join(str(p) for p in paras)
     return(summary)
 
 def add_search_index(post_data):
@@ -74,13 +82,21 @@ def resize_and_copy(src, target):
     # shutil.copyfile(os.path.join(src_path, file), 
                 #     os.path.join(live_path, file))
     img = Image(filename=src)
-    # print(img.size)
+    
+    # Resize large images
     if img.height > 550:
         with img.clone() as new_image:
             new_image.transform(resize='x550')
             new_image.save(filename=target)
     else:
         shutil.copyfile(src, target)
+    
+    # Generate thumbnail
+    target_th = target.split('.')
+    target_th = target_th[0]+'_thumb.'+target_th[1]
+    with img.clone() as new_image:
+            new_image.transform(resize='x100')
+            new_image.save(filename=target_th)
     
     
 def wrap_and_write_post(replacements, template_path, output_path):
@@ -123,7 +139,7 @@ def generate_posts(to_publish, src_dir, live_dir):
                 pd["html"] = open(output_path, 'r').read()
                 pd["title"] = get_title(src_name)
                 pd["date"] = get_date(pd["html"], src_name)
-                pd["summary"] = get_summary(pd["html"])
+                pd["summary"] = get_summary(pd["html"], pd["name"])
                 replacements = {
                     '{{body}}': pd["html"], 
                     '{{title}}': pd["title"],
@@ -148,11 +164,11 @@ def generate_index(post_data, live_dir, root):
     for post in post_data:
         date = time.strftime("%Y-%m-%d", time.localtime(post['date']))
         if(posts < 3):
-            link = ("Read more of: <a href='%s/index.html'>%s</a></li>\n"
+            link = ("Read more of: <a href='posts/%s/index.html'>%s</a></li>\n"
                 %(post['name'], post['title']))
             summary_posts += ("<article><h3>%s</h3>\
-                    <p>%s</p><div>%s</div><p>...</p><p>%s</p></article>\n"
-                    %(post['title'], date, post['summary'], link))
+                    <p>%s</p><p>...</p><p>%s</p></article>\n"
+                    %(post['title'], post['summary'], link))
         posts += 1
         post_list += ("<li><a href='%s/index.html'>%s \
                 <small>%s</small></a></li>\n"
