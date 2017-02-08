@@ -38,7 +38,8 @@ Minor Bug Fixes/Admin:
 - [x] <del>Strip img tags from summary</del>Replace imgs with thumbnails
 - [x] Get favicon
 - [ ] Make output folder configurable.
-- [ ] Fix character encoding issuesz
+- [ ] Fix character encoding issues.
+- [ ] Arrange location of 'resources' relative to live path.
 
 Maybe Do:
 

@@ -182,16 +182,19 @@ def generate_index(post_data, live_dir, root):
         os.path.join(root,'index.html'))
 
     
-def publish(src_dir):
-    root = 'live'
-    live_dir = os.path.join(root, 'posts/')
+def publish(src_dir, live_dir):
+    root = live_dir # root of the live directory
+    live_dir = os.path.join(root, 'posts/') # posts dir
+
+    if not os.path.exists(root):
+        os.mkdir(root)
+        os.mkdir(live_dir)
+
     to_publish = [directory for directory in os.listdir(src_dir) 
         if '.' not in directory]
-
     post_data = generate_posts(to_publish, src_dir, live_dir)
     post_data = add_search_index(post_data)
     post_data = sorted(post_data, key=lambda x: x['date'], reverse=True)
-    
     generate_index(post_data, live_dir, root)
     
 
@@ -199,7 +202,7 @@ if __name__ == "__main__":
     """Publish markdown files from source as HTML
     """
     parser = argparse.ArgumentParser()
-    default_directory = 'src_test/'
+    default_directory, default_target = 'src_test/', 'live_test/'
     parser.add_argument("-t", "--test", 
         help="Run doctests",
         action="store_true")
@@ -207,12 +210,17 @@ if __name__ == "__main__":
         nargs='?', 
         default=os.path.join(os.getcwd(), default_directory),
         help="Path to source files (defaults to "+default_directory+")")
+    parser.add_argument("target",
+        nargs='?',
+        default=os.path.join(os.getcwd(), default_target),
+        help="Path to live/published files (defaults to "+default_target+")"
+        )
     args = parser.parse_args()
     
     if(args.test): 
         import doctest
         doctest.testmod()
     else: 
-        publish(args.path)
+        publish(args.path, args.target)
     
     
