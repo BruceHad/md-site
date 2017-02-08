@@ -28,6 +28,7 @@ Features:
 - [ ] Automatic FTP
 - [ ] HTTPS
 - [x] Automatically downsize images
+- [ ] 
 
 Minor Bug Fixes/Admin:
 
@@ -37,7 +38,7 @@ Minor Bug Fixes/Admin:
 - [x] <del>Strip img tags from summary</del>Replace imgs with thumbnails
 - [x] Get favicon
 - [ ] Make output folder configurable.
-- [ ] Fix character encoding issues
+- [ ] Fix character encoding issuesz
 
 Maybe Do:
 
