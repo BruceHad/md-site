@@ -1,22 +1,47 @@
-import sys, os, markdown, operator, shutil, time, json, re, argparse
+# import sys
+import os
+import markdown
+# import operator
+import shutil
+import time
+import json
+import re
+import argparse
 from wand.image import Image
-from wand.display import display
+# from wand.display import display
 from bs4 import BeautifulSoup
+
+TEMPLATE_PATH = 'templates/'
+
+
+def read_json(file_path):
+    """ Reads json from file """
+    with open(file_path, "r") as f:
+        return json.loads(f.read())
+
+
+def write_json(file_path, my_json):
+    """ Write json to a file """
+    with open(file_path, "w") as f:
+        f.write(json.dumps(my_json))
+    return
+
 
 def get_title(string):
     """ Converts the folder name to a nicely printed title.
-     
+
     >>> get_title('test')
     'Test'
     >>> get_title('test_test')
     'Test Test'
     """
     return ' '.join([word.title() for word in string.split('_')])
-    
+
+
 def get_date(string, post_name):
     """ Captures any dates of the format yyyy-mm-dd or yyyy-mm-dd hh:mm
         from the supplied string.
-        
+
         >>> get_date('    2016-12-31 10:00    ', 'test1')
         1483178400.0
         >>> get_date('   2016-12-31', 'test2')
@@ -26,7 +51,7 @@ def get_date(string, post_name):
         False
         >>> get_date('   2016-12-31 10:00    2010-12-31 10:00', 'test4')
         1483178400.0
-        
+
     """
     match = re.search(r'\d{4}-\d{2}-\d{2} *(\d{2}:\d{2})?', string)
     if(not match):
@@ -34,7 +59,7 @@ def get_date(string, post_name):
         return False
     else:
         date_string = match.group()
-        if(len(date_string) == 16): 
+        if(len(date_string) == 16):
             date_time = time.strptime(match.group(), '%Y-%m-%d %H:%M')
             return time.mktime(date_time)
         elif(len(date_string) == 10):
@@ -43,18 +68,19 @@ def get_date(string, post_name):
 
 
 def get_summary(html, src_post):
-    """ Extract a sample of the post contents. And convert image srcs to 
+    """ Extract a sample of the post contents. And convert image srcs to
         link to smaller versions. Expects some html in a string.
     """
     bs = BeautifulSoup(html, "html.parser")
     for img in bs.findAll('img'):
         fn_split = img['src'].split('.')
-        new_fn = fn_split[0]+'_thumb.'+fn_split[1]
+        new_fn = fn_split[0] + '_thumb.' + fn_split[1]
         img['src'] = os.path.join('posts', src_post, new_fn)
 
     paras = bs.findAll('p', limit=3)
     summary = ''.join(str(p) for p in paras)
     return(summary)
+
 
 def add_search_index(post_data):
     """Generate a searchable index based on post data
@@ -63,26 +89,28 @@ def add_search_index(post_data):
         p['search_index'] = p['title'].split(' ')
     return post_data
 
+
 def get_search_index_json(post_data):
     """Generate an index of keywords that link to posts
     """
     index = {}
     for p in post_data:
         for keyword in p['search_index']:
-        	if keyword in index:
-        		index[keyword].append(p['name'])
-        	else:
-	            index[keyword] = [p['name'],]
+            if keyword in index:
+                index[keyword].append(p['name'])
+            else:
+                index[keyword] = [p['name'], ]
     return json.dumps(index)
 
+
 def resize_and_copy(src, target):
-    """ Takes any image files and downsizes then 
+    """ Takes any image files and downsizes then
         copies to target.
     """
-    # shutil.copyfile(os.path.join(src_path, file), 
-                #     os.path.join(live_path, file))
+    # shutil.copyfile(os.path.join(src_path, file),
+    #     os.path.join(live_path, file))
     img = Image(filename=src)
-    
+
     # Resize large images
     if img.height > 550:
         with img.clone() as new_image:
@@ -90,63 +118,65 @@ def resize_and_copy(src, target):
             new_image.save(filename=target)
     else:
         shutil.copyfile(src, target)
-    
+
     # Generate thumbnail
     target_th = target.split('.')
-    target_th = target_th[0]+'_thumb.'+target_th[1]
+    target_th = target_th[0] + '_thumb.' + target_th[1]
     with img.clone() as new_image:
-            new_image.transform(resize='x100')
-            new_image.save(filename=target_th)
-    
-    
+        new_image.transform(resize='x100')
+        new_image.save(filename=target_th)
+
+
 def wrap_and_write_post(replacements, template_path, output_path):
     """ Take a template file and replace the contents with actual data
     as defined in replacements. Results are written to output_path file.
     """
-    
+
     with open(template_path) as infile, open(output_path, 'w') as outfile:
         for line in infile:
             for src, target in replacements.items():
                 line = line.replace(src, target)
             outfile.write(line)
-    
+
+
 def generate_posts(to_publish, src_dir, live_dir):
-    """ Map to_publish folders to live_dir, converting the MD to HTML 
-    and extracting post_data as we go.
-    
+    """ Map to_publish folders to live_dir, converting the MD to HTML
+        and extracting post_data as we go.
     """
-    
+
     # Clear down posts folders
-    shutil.rmtree(live_dir) 
-    os.mkdir(live_dir)
-    
+    # shutil.rmtree(live_dir)
+    # os.mkdir(live_dir)
+
     post_data = []
     for src_name in to_publish:
         src_path = os.path.join(src_dir, src_name)
         live_path = os.path.join(live_dir, src_name)
         md_file_exists = False
-        os.mkdir(live_path)
+        if not os.path.exists(live_path):
+            os.mkdir(live_path)
         for file in os.listdir(src_path):
             if file.endswith(".md"):
                 # code expects one and only one md file per folder.
                 md_file_exists = True
                 input_path, output_path = (
-                    os.path.join(src_path,file), 
-                    os.path.join(live_path,'index.html'))
-                markdown.markdownFromFile(input=input_path, 
-                    output=output_path, output_format="html5")
+                    os.path.join(src_path, file),
+                    os.path.join(live_path, 'index.html'))
+                markdown.markdownFromFile(input=input_path,
+                                          output=output_path,
+                                          output_format="html5")
                 pd = {"name": src_name}
                 pd["html"] = open(output_path, 'r').read()
                 pd["title"] = get_title(src_name)
                 pd["date"] = get_date(pd["html"], src_name)
                 pd["summary"] = get_summary(pd["html"], pd["name"])
                 replacements = {
-                    '{{body}}': pd["html"], 
+                    '{{body}}': pd["html"],
                     '{{title}}': pd["title"],
                 }
                 wrap_and_write_post(
-                    replacements, 
-                    'templates/posts/page_template.html', 
+                    replacements,
+                    'templates/posts/page_template.html',
                     output_path)
                 post_data.append(pd)
             elif file.endswith(tuple(['.jpg', '.gif', '.png', 'jpeg'])):
@@ -154,10 +184,10 @@ def generate_posts(to_publish, src_dir, live_dir):
                 target = os.path.join(live_path, file)
                 resize_and_copy(src, target)
 
-
-        if not md_file_exists: 
-            shutil.rmtree(live_path) # delete empty folder
+        if not md_file_exists:
+            shutil.rmtree(live_path)  # delete empty folder
     return post_data
+
 
 def generate_index(post_data, live_dir, root):
     summary_posts, post_list, posts = '', '', 0
@@ -165,62 +195,129 @@ def generate_index(post_data, live_dir, root):
         date = time.strftime("%Y-%m-%d", time.localtime(post['date']))
         if(posts < 3):
             link = ("Read more of: <a href='posts/%s/index.html'>%s</a></li>\n"
-                %(post['name'], post['title']))
+                    % (post['name'], post['title']))
             summary_posts += ("<article><h3>%s</h3>\
                     <p>%s</p><p>...</p><p>%s</p></article>\n"
-                    %(post['title'], post['summary'], link))
+                              % (post['title'], post['summary'], link))
         posts += 1
         post_list += ("<li><a href='%s/index.html'>%s \
                 <small>%s</small></a></li>\n"
-                %('posts/'+post['name'], post['title'], date))
-    replacements = {'{{first_post}}': summary_posts, 
-        '{{link_list}}': post_list,
-        '{{search_index}}': get_search_index_json(post_data),
-    }
-    wrap_and_write_post(replacements, 
-        'templates/posts/index_template.html', 
-        os.path.join(root,'index.html'))
+                      % ('posts/' + post['name'], post['title'], date))
+    replacements = {'{{first_post}}': summary_posts,
+                    '{{link_list}}': post_list,
+                    '{{search_index}}': get_search_index_json(post_data),
+                    }
+    wrap_and_write_post(replacements,
+                        'templates/posts/index_template.html',
+                        os.path.join(root, 'index.html'))
 
-    
+
+def write_file(line, fl_path):
+    """ Create a file from and write line to it"""
+    with open(fl_path, "w") as f:
+        f.write("{0}".format(line))
+
+
+def create_fresh_live_dir(drctry):
+    """ Create a new, empty direcory and .cache file"""
+    os.mkdir(drctry)
+    os.mkdir(os.path.join(drctry, "posts/"))
+    write_file('', os.path.join(drctry, ".cache"))
+    write_json(os.path.join(drctry, ".jcache"), [])
+    shutil.copytree(os.path.join(TEMPLATE_PATH, 'resources/'),
+                    os.path.join(drctry, "resources/"))
+
+
+def get_changed_directories(all_drs, src_dr, live_dr):
+    """ Finds out if any of the directories have been updated since
+    last published date """
+    changed_drs = []
+    with open(os.path.join(live_dr, ".cache")) as c:
+        last_modified = c.read()
+        if last_modified != '':
+            last_modified = float(last_modified)
+    for dr in all_drs:
+        path = os.path.join(src_dr, dr)
+        path_modified = get_last_update(path)
+        if last_modified == '' or path_modified > last_modified:
+            changed_drs.append(dr)
+    return changed_drs
+
+
+def get_last_update(dr):
+    dates = []
+    for root, directories, filenames in os.walk(dr):
+        for filename in filenames:
+            f = os.path.join(root, filename)
+            dates.append(os.path.getmtime(f))
+    return max(dates)
+
+
+def update_cache(dr):
+    posts_dr = os.path.join(dr, 'posts/')
+    cache = os.path.join(dr, ".cache")
+    write_file(get_last_update(posts_dr), cache)
+
+
+def find_post(name, post_data):
+    for index in range(len(post_data)):
+        if name == post_data[index]['name']:
+            return index
+    return -1
+
+
 def publish(src_dir, live_dir):
-    root = live_dir # root of the live directory
-    live_dir = os.path.join(root, 'posts/') # posts dir
+    live_root = live_dir  # root of the live directory
+    live_dir = os.path.join(live_root, "posts/")  # posts dir
+    if not os.path.exists(live_root):
+        print("Create new directory.")
+        create_fresh_live_dir(live_root)
+    post_data = read_json(os.path.join(live_root, ".jcache"))
+    all_directories = [d for d in os.listdir(src_dir)
+                       if '.' not in d]
+    to_publish = get_changed_directories(all_directories, src_dir, live_root)
+    if len(to_publish) > 0:
+        print(to_publish)
+        print("{0} post(s) to be updated".format(len(to_publish)))
+        new_posts = generate_posts(to_publish, src_dir, live_dir)
+        for post in new_posts:
+            post_index = find_post(post['name'], post_data)
+            if post_index >= 0:
+                print(post_index)
+                post_data[post_index] = post
+            else:
+                post_data.append(post)
+        post_data = add_search_index(post_data)
+        post_data = sorted(post_data, key=lambda x: x['date'], reverse=True)
+        generate_index(post_data, live_dir, live_root)
+        update_cache(live_root)
+        write_json(os.path.join(live_root, '.jcache'), post_data)
+    else:
+        print("No updates.")
 
-    if not os.path.exists(root):
-        os.mkdir(root)
-        os.mkdir(live_dir)
-
-    to_publish = [directory for directory in os.listdir(src_dir) 
-        if '.' not in directory]
-    post_data = generate_posts(to_publish, src_dir, live_dir)
-    post_data = add_search_index(post_data)
-    post_data = sorted(post_data, key=lambda x: x['date'], reverse=True)
-    generate_index(post_data, live_dir, root)
-    
 
 if __name__ == "__main__":
-    """Publish markdown files from source as HTML
-    """
+    """Publish markdown files from source as HTML"""
     parser = argparse.ArgumentParser()
     default_directory, default_target = 'src_test/', 'live_test/'
-    parser.add_argument("-t", "--test", 
-        help="Run doctests",
-        action="store_true")
-    parser.add_argument("path", 
-        nargs='?', 
-        default=os.path.join(os.getcwd(), default_directory),
-        help="Path to source files (defaults to "+default_directory+")")
+    parser.add_argument("-t", "--test",
+                        help="Run doctests",
+                        action="store_true")
+    parser.add_argument("path",
+                        nargs='?',
+                        default=os.path.join(os.getcwd(), default_directory),
+                        help="Path to source files defaults to " +
+                        default_directory + ")")
     parser.add_argument("target",
-        nargs='?',
-        default=os.path.join(os.getcwd(), default_target),
-        help="Path to live/published files (defaults to "+default_target+")"
-        )
+                        nargs='?',
+                        default=os.path.join(os.getcwd(), default_target),
+                        help="Path to live/published files (defaults to " +
+                        default_target + ")"
+                        )
     args = parser.parse_args()
-    
-    if(args.test): 
+
+    if(args.test):
         import doctest
         doctest.testmod()
-    else: 
+    else:
         publish(args.path, args.target)
-    
-    

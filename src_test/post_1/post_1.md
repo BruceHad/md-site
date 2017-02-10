@@ -2,6 +2,8 @@
 
 ![alt text](test.jpg)
 
+Some test text.
+
 A paragraphs of text. ere is a graduation programme with two sections, one for the list of people graduating, and one for the description of the ceremony. (The markup in this example features an uncommon style sometimes used to minimize the amount of inter-element whitespace.)
 
 Examples of sections would be chapters, the various tabbed pages in a tabbed dialog box, or the numbered sections of a thesis. A Web site's home page could be split into sections for an introduction, news items, and contact information.

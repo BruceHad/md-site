@@ -37,11 +37,12 @@ Minor Bug Fixes/Admin:
 - [x] Get working on local server (SimpleHTTPServer)
 - [x] <del>Strip img tags from summary</del>Replace imgs with thumbnails
 - [x] Get favicon
-- [ ] Make output folder configurable.
+- [x] Make output folder configurable.
 - [ ] Fix character encoding issues.
 - [ ] Arrange location of 'resources' relative to live path.
+- [ ] Delete posts.
 
 Maybe Do:
 
-- [ ] Only update changed pages.
+- [x] Only update new/changed pages.
 - [ ] Include videos/music.
