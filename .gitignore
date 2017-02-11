@@ -4,3 +4,4 @@ posts
 live/posts/*
 live/index*
 config.ini
+.*

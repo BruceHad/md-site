@@ -266,6 +266,28 @@ def find_post(name, post_data):
     return -1
 
 
+def get_deleted_posts(post_data, all_directories):
+    deleted_posts = []
+    for p in post_data:
+        if p['name'] not in all_directories:
+            deleted_posts.append(p['name'])
+    return deleted_posts
+
+
+def remove_post(post_data, post):
+    for i in range(len(post_data)):
+        if post_data[i]['name'] == post:
+            if i == 0:
+                return post_data[i + 1:]
+            elif i == len(post_data) - 1:
+                return post_data[:i]
+            else:
+                return post_data[:i] + post_data[i + 1:]
+    # nothing found
+    print("Error: Deleted post not found.")
+    return post_data
+
+
 def publish(src_dir, live_dir):
     live_root = live_dir  # root of the live directory
     live_dir = os.path.join(live_root, "posts/")  # posts dir
@@ -275,9 +297,10 @@ def publish(src_dir, live_dir):
     post_data = read_json(os.path.join(live_root, ".jcache"))
     all_directories = [d for d in os.listdir(src_dir)
                        if '.' not in d]
+    print(all_directories)
+    deleted_posts = get_deleted_posts(post_data, all_directories)
     to_publish = get_changed_directories(all_directories, src_dir, live_root)
     if len(to_publish) > 0:
-        print(to_publish)
         print("{0} post(s) to be updated".format(len(to_publish)))
         new_posts = generate_posts(to_publish, src_dir, live_dir)
         for post in new_posts:
@@ -287,13 +310,23 @@ def publish(src_dir, live_dir):
                 post_data[post_index] = post
             else:
                 post_data.append(post)
+    else:
+        print("No new posts.")
+
+    if len(deleted_posts) > 0:
+        print("{0} post(s) to be deleted".format(len(deleted_posts)))
+        for p in deleted_posts:
+            shutil.rmtree(os.path.join(live_root, "posts/", p))
+            post_data = remove_post(post_data, p)
+    else:
+        print("No posts deleted")
+
+    if len(to_publish) > 0 or len(deleted_posts) > 0:
         post_data = add_search_index(post_data)
         post_data = sorted(post_data, key=lambda x: x['date'], reverse=True)
         generate_index(post_data, live_dir, live_root)
         update_cache(live_root)
         write_json(os.path.join(live_root, '.jcache'), post_data)
-    else:
-        print("No updates.")
 
 
 if __name__ == "__main__":

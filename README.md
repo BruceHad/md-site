@@ -39,7 +39,7 @@ Minor Bug Fixes/Admin:
 - [x] Get favicon
 - [x] Make output folder configurable.
 - [ ] Fix character encoding issues.
-- [ ] Arrange location of 'resources' relative to live path.
+- [x] Arrange location of 'resources' relative to live path.
 - [ ] Delete posts.
 
 Maybe Do:
