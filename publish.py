@@ -327,9 +327,9 @@ def publish(src_dir, live_dir):
         generate_index(post_data, live_dir, live_root)
         update_cache(live_root)
         write_json(os.path.join(live_root, '.jcache'), post_data)
-        return True
+        return (to_publish, deleted_posts)
     else:
-        return False
+        return None
 
 
 if __name__ == "__main__":
@@ -363,13 +363,19 @@ if __name__ == "__main__":
         doctest.testmod()
     else:
         published = publish(args.path, args.target)
-        if(args.forceupload):
+        if args.forceupload:
             my_ftp.upload_site(args.target)
             print("Site uploaded to remote server.")
-        elif(published and args.upload):
-            # ftp.upload_directory()
-            print("Changes uploaded to server.x")
-        elif(published):
-            print("Changes made but not uploaded to server.")
+        elif args.upload and published:
+            new, deleted = published
+            if len(new) > 0:
+                my_ftp.upload_posts(args.target, new)
+                print("{0} new/changed posts uploaded to server."
+                      .format(len(new)))
+            if len(deleted) > 0:
+                my_ftp.delete_posts(deleted)
+                print("{0} posts deleted from server.".format(len(deleted)))
+            # finally upload index
+            my_ftp.upload_changed_index(args.target)
         else:
-            print("No changes made.")
+            print("Upload set to {0}".format(args.upload))

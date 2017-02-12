@@ -15,6 +15,7 @@ target_dir = config['blog']['target']
 
 def upload_file(ftp, file_path):
     """ Upload a single file """
+    # print(ftp.pwd(), file_path)
     fh = open(file_path, 'rb')
     ftp.storbinary('STOR %s' % file_path, fh)
     fh.close()
@@ -69,6 +70,49 @@ def upload_site(src):
     make_directory(ftp, target_dir)
     ftp.cwd(target_dir)
     upload_dir(ftp, src)
+    ftp.quit()
+
+
+def upload_posts(src, posts):
+    """ Upload only the new/changed posts. """
+    ftp = FTP(host, user, pw)
+    # print(ftp.pwd(), ftp.nlst(), target_dir)
+    for p in posts:
+        src_dr = os.path.join(src, 'posts', p)
+        post_dr = os.path.join(target_dir, 'posts', p)
+        # print(src_dr, post_dr)
+        make_directory(ftp, post_dr)
+        ftp.cwd(post_dr)
+        upload_dir(ftp, src_dr)
+    ftp.quit()
+
+
+def delete_posts(posts):
+    """ Delete any old folder from server """
+    ftp = FTP(host, user, pw)
+    root = os.path.join(target_dir, 'posts')
+    ftp.cwd(root)
+    for p in posts:
+        if p in ftp.nlst():
+            ftp.cwd(p)
+            for f in ftp.nlst():
+                if f not in ['.', '..']:
+                    print(f)
+                    print(ftp.delete(f))
+            ftp.cwd('..')
+            print(ftp.pwd())
+            ftp.rmd(p)
+    ftp.quit()
+
+
+def upload_changed_index(src):
+    ftp = FTP(host, user, pw)
+    # print(ftp.pwd(), ftp.nlst(), target_dir)
+    ftp.cwd(target_dir)
+    os.chdir(src)
+    # src_file = os.path.join(src, 'index.html')
+    upload_file(ftp, 'index.html')
+    ftp.quit()
 
 
 if __name__ == "__main__":
