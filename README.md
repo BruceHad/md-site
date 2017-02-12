@@ -40,7 +40,8 @@ Minor Bug Fixes/Admin:
 - [x] Make output folder configurable.
 - [ ] Fix character encoding issues.
 - [x] Arrange location of 'resources' relative to live path.
-- [ ] Delete posts.
+- [x] Delete posts.
+- [ ] Improve 'changed posts'
 
 Maybe Do:
 

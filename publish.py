@@ -10,6 +10,7 @@ import argparse
 from wand.image import Image
 # from wand.display import display
 from bs4 import BeautifulSoup
+import my_ftp
 
 TEMPLATE_PATH = 'templates/'
 
@@ -297,7 +298,6 @@ def publish(src_dir, live_dir):
     post_data = read_json(os.path.join(live_root, ".jcache"))
     all_directories = [d for d in os.listdir(src_dir)
                        if '.' not in d]
-    print(all_directories)
     deleted_posts = get_deleted_posts(post_data, all_directories)
     to_publish = get_changed_directories(all_directories, src_dir, live_root)
     if len(to_publish) > 0:
@@ -319,7 +319,7 @@ def publish(src_dir, live_dir):
             shutil.rmtree(os.path.join(live_root, "posts/", p))
             post_data = remove_post(post_data, p)
     else:
-        print("No posts deleted")
+        print("No posts deleted.")
 
     if len(to_publish) > 0 or len(deleted_posts) > 0:
         post_data = add_search_index(post_data)
@@ -327,6 +327,9 @@ def publish(src_dir, live_dir):
         generate_index(post_data, live_dir, live_root)
         update_cache(live_root)
         write_json(os.path.join(live_root, '.jcache'), post_data)
+        return True
+    else:
+        return False
 
 
 if __name__ == "__main__":
@@ -335,6 +338,12 @@ if __name__ == "__main__":
     default_directory, default_target = 'src_test/', 'live_test/'
     parser.add_argument("-t", "--test",
                         help="Run doctests",
+                        action="store_true")
+    parser.add_argument("-u", "--upload",
+                        help="Upload new/changed posts to remote server",
+                        action="store_true")
+    parser.add_argument("-fu", "--forceupload",
+                        help="Upload all files to remote server",
                         action="store_true")
     parser.add_argument("path",
                         nargs='?',
@@ -353,4 +362,14 @@ if __name__ == "__main__":
         import doctest
         doctest.testmod()
     else:
-        publish(args.path, args.target)
+        published = publish(args.path, args.target)
+        if(args.forceupload):
+            my_ftp.upload_site(args.target)
+            print("Site uploaded to remote server.")
+        elif(published and args.upload):
+            # ftp.upload_directory()
+            print("Changes uploaded to server.x")
+        elif(published):
+            print("Changes made but not uploaded to server.")
+        else:
+            print("No changes made.")
