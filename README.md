@@ -23,7 +23,7 @@ To run locally:
 
 Features:
 
-- [x] Search (Basic)
+- [x] Search (Basic)6
 - [x] Click to open larger images
 - [ ] Automatic FTP
 - [ ] HTTPS
@@ -42,6 +42,9 @@ Minor Bug Fixes/Admin:
 - [x] Arrange location of 'resources' relative to live path.
 - [x] Delete posts.
 - [ ] Improve 'changed posts'
+- [x] Configure config.ini
+- [ ] Design changes
+- [ ] Refactor my_ftp
 
 Maybe Do:
 

@@ -1,7 +1,8 @@
 env
 docs
 posts
-live/posts/*
-live/index*
-config.ini
+live
+config_live.ini
+config_test.ini
 .*
+__pycache__

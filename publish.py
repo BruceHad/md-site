@@ -1,18 +1,29 @@
-# import sys
 import os
 import markdown
-# import operator
+import configparser
 import shutil
 import time
 import json
 import re
 import argparse
 from wand.image import Image
-# from wand.display import display
 from bs4 import BeautifulSoup
-import my_ftp
 
-TEMPLATE_PATH = 'templates/'
+import my_ftp
+config = {}
+
+
+def set_config_values(config_path):
+    # Read in config data
+    c = configparser.ConfigParser()
+    c.read(config_path)
+    config['src'] = c['blog']['src']
+    config['live'] = c['blog']['live']
+    config['remote'] = c['blog']['remote']
+    config['templates'] = c['blog']['templates']
+    config['ftpuser'] = c['FTP']['user']
+    config['ftphost'] = c['FTP']['host']
+    config['ftppw'] = c['FTP']['pw']
 
 
 def read_json(file_path):
@@ -225,7 +236,7 @@ def create_fresh_live_dir(drctry):
     os.mkdir(os.path.join(drctry, "posts/"))
     write_file('', os.path.join(drctry, ".cache"))
     write_json(os.path.join(drctry, ".jcache"), [])
-    shutil.copytree(os.path.join(TEMPLATE_PATH, 'resources/'),
+    shutil.copytree(os.path.join(config['templates'], 'resources/'),
                     os.path.join(drctry, "resources/"))
 
 
@@ -289,9 +300,10 @@ def remove_post(post_data, post):
     return post_data
 
 
-def publish(src_dir, live_dir):
-    live_root = live_dir  # root of the live directory
-    live_dir = os.path.join(live_root, "posts/")  # posts dir
+def publish():
+    src_dir = config['src']
+    live_root = config['live']  # root of the live directory
+    live_posts_dir = os.path.join(live_root, "posts/")  # posts dir
     if not os.path.exists(live_root):
         print("Create new directory.")
         create_fresh_live_dir(live_root)
@@ -302,7 +314,7 @@ def publish(src_dir, live_dir):
     to_publish = get_changed_directories(all_directories, src_dir, live_root)
     if len(to_publish) > 0:
         print("{0} post(s) to be updated".format(len(to_publish)))
-        new_posts = generate_posts(to_publish, src_dir, live_dir)
+        new_posts = generate_posts(to_publish, src_dir, live_posts_dir)
         for post in new_posts:
             post_index = find_post(post['name'], post_data)
             if post_index >= 0:
@@ -324,7 +336,7 @@ def publish(src_dir, live_dir):
     if len(to_publish) > 0 or len(deleted_posts) > 0:
         post_data = add_search_index(post_data)
         post_data = sorted(post_data, key=lambda x: x['date'], reverse=True)
-        generate_index(post_data, live_dir, live_root)
+        generate_index(post_data, live_posts_dir, live_root)
         update_cache(live_root)
         write_json(os.path.join(live_root, '.jcache'), post_data)
         return (to_publish, deleted_posts)
@@ -335,7 +347,7 @@ def publish(src_dir, live_dir):
 if __name__ == "__main__":
     """Publish markdown files from source as HTML"""
     parser = argparse.ArgumentParser()
-    default_directory, default_target = 'src_test/', 'live_test/'
+    # default_directory, default_target = 'src_test/', 'live_test/'
     parser.add_argument("-t", "--test",
                         help="Run doctests",
                         action="store_true")
@@ -345,26 +357,21 @@ if __name__ == "__main__":
     parser.add_argument("-fu", "--forceupload",
                         help="Upload all files to remote server",
                         action="store_true")
-    parser.add_argument("path",
-                        nargs='?',
-                        default=os.path.join(os.getcwd(), default_directory),
-                        help="Path to source files defaults to " +
-                        default_directory + ")")
-    parser.add_argument("target",
-                        nargs='?',
-                        default=os.path.join(os.getcwd(), default_target),
-                        help="Path to live/published files (defaults to " +
-                        default_target + ")"
-                        )
+    parser.add_argument("config",
+                        nargs="?",
+                        default="config_test.ini",
+                        help="Config file path")
     args = parser.parse_args()
 
     if(args.test):
         import doctest
         doctest.testmod()
     else:
-        published = publish(args.path, args.target)
+        set_config_values(args.config)
+        published = publish()
+
         if args.forceupload:
-            my_ftp.upload_site(args.target)
+            my_ftp.upload_site(config['LIVE_PATH'])
             print("Site uploaded to remote server.")
         elif args.upload and published:
             new, deleted = published
