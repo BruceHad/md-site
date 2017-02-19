@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en-gb">
+	<head>
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>Index</title>
+		<link rel="icon" href="resources/favicon.ico" />
+		<link rel="stylesheet" href="resources/normalize.css" />
+		<link rel="stylesheet" href="resources/style.css" />
+		<script src="resources/search.js"></script>
+	</head>
+	<body>
+		
+		<!-- Section 1 -->
+		<header>
+			<div class="container">
+				<h1>Log</h1>
+			</div>
+		</header>
+		
+		<!-- Section 2 -->
+		<nav class="nav-search">
+			<div class="container">
+				<input type="text" class="input-search" placeholder="Search" />
+				<div id="search-results"></div>
+			</div>
+		</nav>
+		
+		<!-- Section 3 -->
+		<article class="container" id="article-main">
+			<h2>All Pages</h2>
+			<nav>
+				<ul class="ul-pages">
+					{{link_list}}
+				</ul>
+			</nav>
+		</article>
+		
+		<script>
+			search_json = {{search_index}};
+			set_search_data(search_json);
+		</script>
+	</body>
+</html>

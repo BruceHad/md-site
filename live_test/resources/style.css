@@ -1,20 +1,35 @@
+/* Clearfix */
+.group:after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
 body {
-	background-color: #ddd;
-	color: #333;
+	background-color: white;
+	color: #444;
 }
 
 header {
-	background-color: #555;
-	color: #ddd;
 	overflow: hidden;
 	height: 100px;
+	background: white url('background.jpeg') no-repeat top right;
 }
 
 header h1 {
 	text-transform: uppercase;
 	text-align: center;
 	line-height: 100px;
+	font-size: 60px;
+	color: white; 
 	margin:0; padding:0;
+}
+
+h2 {
+	margin: 4px 0;
+	padding: 2px 0;
+	text-align: right;
+	border-top: 1px solid #aaa;
 }
 
 h2, h3, h4 {
@@ -38,7 +53,7 @@ section {
 	margin-bottom: 15px;
 }
 
-#article-main article img {
+#article-main img {
 	max-width: 100%;
 	max-height: 100vh;
 	min-height: 200px;
@@ -47,7 +62,7 @@ section {
 }
 
 .nav-search, .form-password {
-	padding: 2em 0;
+	padding: 0.75em 0;
 }
 
 .input-search, .input-password{
@@ -93,25 +108,36 @@ section {
 .ul-pages {
 	list-style-type: none;
 	margin:0; padding:0;
+	border-bottom: 1px solid #aaa;
 }
 
 .ul-pages li {
-	padding: 5px 0;
-	margin: 2px 0;
+	padding: 0;
+	margin: 0 0 2px 0;
 }
 
 .ul-pages a, #search-results a{
-	font-size: large;
+	font-size: 18px;
 	text-decoration: none;
 	color: black;
-	padding: 5px;
-	display: block;
-	background-color: #eee;
-	
+	padding: 5px 10px;
+	display: block;	
+	background-color: #ddd;
+	float: left;
+	text-transform: uppercase;
+	transition: background-color 1s, padding 0.5s;
 }
 
-.ul-pages a:hover, #search-results a:hover{
-	background-color: white;
+
+.ul-pages small {
+	display: block;
+	float: right;
+}
+
+.ul-pages a:hover, .ul-pages a:focus, #search-results a:hover{
+	background-color: #F5EE73;
+	padding: 5px 15px;
+	outline: 0;
 }
 
 .ul-pages small {
@@ -140,3 +166,13 @@ section {
 	}
 }
 
+footer {
+	background-color: #272722;
+	color: #ccc;
+	margin-top: 2em;
+	padding: 1em 2em;
+}
+q {
+	font-family: monospace;
+	font-size: 16px;
+}

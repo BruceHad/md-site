@@ -25,7 +25,7 @@ Features:
 
 - [x] Search (Basic)6
 - [x] Click to open larger images
-- [ ] Automatic FTP
+- [x] Automatic FTP
 - [ ] HTTPS
 - [x] Automatically downsize images
 - [ ] 
@@ -43,7 +43,7 @@ Minor Bug Fixes/Admin:
 - [x] Delete posts.
 - [ ] Improve 'changed posts'
 - [x] Configure config.ini
-- [ ] Design changes
+- [x] Design changes
 - [ ] Refactor my_ftp
 
 Maybe Do:
